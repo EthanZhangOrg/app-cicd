@@ -4,7 +4,7 @@
 pid=$(sudo lsof -i tcp:8081 -t)
 echo $pid
 
-if test -z "$pid"
+if test -z $pid
 then
     echo "Program is not running!"
 else
