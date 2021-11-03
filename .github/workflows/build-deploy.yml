@@ -66,7 +66,7 @@ jobs:
           --deployment-config-name ${{ env.CODEDEPLOY_APPLICATION_NAME }} \
           --deployment-group-name ${{ env.CODEDEPLOY_APPLICATION_DEPLOYMENT_GROUP_NAME }} \
           --description "CSYE6225 - CodeDeploy" \
-          --s3-location bucket=${{ secrets.S3_CODEDEPLOY_BUCKET_PROD }},keys =${{ env.ARTIFACT_NAME }},bundleType=zip \
+          --s3-location bucket=${{ secrets.S3_CODEDEPLOY_BUCKET_PROD }},key=${{ env.ARTIFACT_NAME }},bundleType=zip \
           --region ${{ env.AWS_REGION }} \
           --output json)
 
