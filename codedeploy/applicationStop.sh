@@ -10,5 +10,5 @@ then
 else
     echo "Program is running!"
     echo $pid
-    sudo kill -9 $pid
+    sudo kill $pid
 fi
