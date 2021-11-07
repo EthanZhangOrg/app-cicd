@@ -1,5 +1,5 @@
 # app-cicd
-repo for csye6225 assignment5
+repo for csye6225 assignment 5
 
 1. pull-request will trigger the maven test for the code
 
