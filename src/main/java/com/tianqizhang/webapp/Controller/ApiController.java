@@ -53,7 +53,7 @@ public class ApiController {
     @Autowired
     private AmazonS3 s3Client;
 
-    @GetMapping(value = "/v1/user/self")
+    @GetMapping(value = "/v2/user/self")
     public ResponseEntity<JSON> getUserInfo(@RequestHeader Map<String, String> headers) {
 
         String token = headers.get("authorization").split(" ")[1];
@@ -84,7 +84,7 @@ public class ApiController {
                 HttpStatus.OK);
     }
 
-    @PutMapping(value = "/v1/user/self")
+    @PutMapping(value = "/v2/user/self")
     public ResponseEntity<JSON> updateUserInfo(@RequestHeader Map<String, String> headers, @RequestBody String jsonstr) {
 
         String token = headers.get("authorization").split(" ")[1];
@@ -136,7 +136,7 @@ public class ApiController {
                 HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping(value = "/v1/user")
+    @PostMapping(value = "/v2/user")
     public ResponseEntity<JSON> createUser(@RequestBody String jsonstr) {
         JSONObject userJsonObject = JSONObject.parseObject(jsonstr);
 
@@ -184,7 +184,7 @@ public class ApiController {
                 HttpStatus.CREATED);
     }
 
-    @PostMapping(value = "/v1/user/self/pic")
+    @PostMapping(value = "/v2/user/self/pic")
     private ResponseEntity<JSON> uploadUserPic(@RequestHeader Map<String, String> headers, HttpEntity<byte[]> requestEntity) {
         String token = headers.get("authorization").split(" ")[1];
         String usernameAndPassword = new String(Base64.getDecoder().decode(token));
@@ -258,7 +258,7 @@ public class ApiController {
         return file;
     }
 
-    @GetMapping(value = "/v1/user/self/pic")
+    @GetMapping(value = "/v2/user/self/pic")
     private ResponseEntity<JSON> getUserPic(@RequestHeader Map<String, String> headers) {
         String token = headers.get("authorization").split(" ")[1];
         String usernameAndPassword = new String(Base64.getDecoder().decode(token));
@@ -295,7 +295,7 @@ public class ApiController {
                 HttpStatus.OK);
     }
 
-    @DeleteMapping (value = "/v1/user/self/pic")
+    @DeleteMapping (value = "/v2/user/self/pic")
     private ResponseEntity<JSON> deleteUserPic(@RequestHeader Map<String, String> headers) {
         String token = headers.get("authorization").split(" ")[1];
         String usernameAndPassword = new String(Base64.getDecoder().decode(token));
