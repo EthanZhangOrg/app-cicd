@@ -1,3 +1,7 @@
+resource "aws_ebs_default_kms_key" "ebs_default_kms_key" {
+  key_arn = aws_kms_key.kms_key_ebs.arn
+}
+
 resource "aws_launch_configuration" "as_conf" {
   name                        = "asg_launch_config"
   image_id                    = data.aws_ami.ubuntu.id
@@ -6,6 +10,12 @@ resource "aws_launch_configuration" "as_conf" {
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.iam_instance_profile.name
   security_groups             = [aws_security_group.application.id]
+
+  root_block_device {
+    volume_size = var.webapp_root_volume_size
+    volume_type = var.webapp_root_volume_type
+    encrypted   = true
+  }
 
   user_data = <<EOF
 #!/bin/bash
@@ -17,15 +27,22 @@ cd /home/ubuntu
 mkdir webapp_jar
 cd webapp_jar
 touch application.properties
-echo "spring.datasource.url=jdbc:mysql://${aws_db_instance.db_instance.endpoint}/csye6225" >> application.properties
+echo "spring.datasource.jdbcUrl=jdbc:mysql://${aws_db_instance.db_instance.endpoint}/csye6225?sslMode=REQUIRED&trustCertificateKeyStoreUrl=file:///home/ubuntu/clientkeystore.jks&trustCertificateKeyStorePassword=ethankeystorepass" >> application.properties
 echo "spring.datasource.username=${aws_db_instance.db_instance.username}" >> application.properties
 echo "spring.datasource.password=${aws_db_instance.db_instance.password}" >> application.properties
-echo "spring.jpa.hibernate.ddl-auto=update" >> application.properties
+echo "db2.datasource.jdbcUrl=jdbc:mysql://${aws_db_instance.db_instance_replica.endpoint}/csye6225?sslMode=REQUIRED&trustCertificateKeyStoreUrl=file:///home/ubuntu/clientkeystore.jks&trustCertificateKeyStorePassword=ethankeystorepass" >> application.properties
+echo "db2.datasource.username=${aws_db_instance.db_instance.username}" >> application.properties
+echo "db2.datasource.password=${aws_db_instance.db_instance.password}" >> application.properties
 echo "cloud.aws.region=${var.region}" >> application.properties
 echo "s3.bucket.name=${aws_s3_bucket.s3_bucket.bucket}" >> application.properties
+echo "sns.topic.arn=${aws_sns_topic.sns_topic.arn}" >> application.properties
 chown ubuntu:ubuntu application.properties
 cd ..
 chown ubuntu:ubuntu webapp_jar
+cd /home/ubuntu
+wget https://truststore.pki.rds.amazonaws.com/us-east-1/us-east-1-bundle.pem -O /home/ubuntu/us-east-1-bundle.pem
+openssl x509 -outform der -in /home/ubuntu/us-east-1-bundle.pem -out /home/ubuntu/rds-ca-2019-root.der
+keytool -import -alias rds-root -keystore /home/ubuntu/clientkeystore.jks -file /home/ubuntu/rds-ca-2019-root.der -storepass ethankeystorepass -noprompt
   EOF
 }
 
@@ -57,10 +74,10 @@ resource "aws_autoscaling_policy" "autoscaling_policy_up" {
 resource "aws_cloudwatch_metric_alarm" "cloudwatch_metric_alarm_up" {
   alarm_name          = "cpu-usage-max"
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "1"
+  evaluation_periods  = "2"
   metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
-  period              = "60"
+  period              = "120"
   statistic           = "Average"
   threshold           = "5"
 
@@ -83,10 +100,10 @@ resource "aws_autoscaling_policy" "autoscaling_policy_down" {
 resource "aws_cloudwatch_metric_alarm" "cloudwatch_metric_alarm_down" {
   alarm_name          = "cpu-usage-min"
   comparison_operator = "LessThanThreshold"
-  evaluation_periods  = "1"
+  evaluation_periods  = "2"
   metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
-  period              = "60"
+  period              = "120"
   statistic           = "Average"
   threshold           = "3"
 
